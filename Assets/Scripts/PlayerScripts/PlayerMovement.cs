@@ -33,6 +33,10 @@ public class PlayerMovement : MonoBehaviour
     public bool isAttacking = false;
     public float timeAttacking;
 
+    //Miss variables
+    public int missCount = 0;
+    public float missTime = 0;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -45,12 +49,24 @@ public class PlayerMovement : MonoBehaviour
     {
         if (collision.gameObject.Equals(GameObject.Find("Floor")))
             isOnFloor = true;
+        Debug.Log(collision.gameObject);
+        
     }
 
     //End collision
     private void OnCollisionExit2D(Collision2D collision)
     {
         
+    }
+
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        if (collision.gameObject.Equals(GameObject.Find("Arrow Clone")) && isAttacking)
+        {
+            collision.gameObject.GetComponent<Rigidbody2D>().velocity = -collision.gameObject.GetComponent<Rigidbody2D>().velocity;
+            missCount = 0;
+            isAttacking = false;
+        }
     }
 
     // Update is called once per frame
@@ -73,8 +89,22 @@ public class PlayerMovement : MonoBehaviour
             isSliding = false;
         }
 
+        //Attack time
+        if (isAttacking && timeAttacking <= Time.time)
+        {
+            isAttacking = false;
+        }
+
+        //Miss timer
+        if (missCount>=3 && !isAttacking)
+        {
+            missTime = Time.time + 1f;
+            Debug.Log("MISS");
+            missCount = 0;
+        }
+
         //Touch and movement
-        if (Input.touchCount > 0)
+        if (Input.touchCount > 0 && missTime<=Time.time)
         {
             theTouch = Input.GetTouch(0);
 
@@ -91,7 +121,7 @@ public class PlayerMovement : MonoBehaviour
                 endX = theTouch.position.x;
 
                 //Jump
-                if (startY < endY && isOnFloor)
+                if (startY < endY && isOnFloor && Mathf.Abs(endY-startY)>100)
                 {
                     rb.velocity = new Vector2(0, 30);
                     transform.localScale = new Vector2(2, 3);
@@ -100,7 +130,7 @@ public class PlayerMovement : MonoBehaviour
                 }
                 
                 //Slide
-                else if (startY > endY)
+                else if (startY > endY && Mathf.Abs(endY - startY) > 100)
                 {
                     rb.velocity = new Vector2(0, -30);
                     transform.localScale = new Vector2(3, 2);
@@ -111,7 +141,9 @@ public class PlayerMovement : MonoBehaviour
                 //Attack
                 else if (endX > Screen.width/2)
                 {
-                    
+                    isAttacking = true;
+                    timeAttacking = Time.time + 0.1f;
+                    missCount++;
                 }
                 //Block
                 else if(endX <= Screen.height / 2)

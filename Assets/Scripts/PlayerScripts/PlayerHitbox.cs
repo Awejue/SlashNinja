@@ -7,6 +7,7 @@ public class AttackHitbox : MonoBehaviour
     //Player game object
     private GameObject player;
     private bool isSliding;
+    public int health = 2;
 
     // Start is called before the first frame update
     void Start()
@@ -15,10 +16,24 @@ public class AttackHitbox : MonoBehaviour
         
     }
 
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.Equals(GameObject.Find("Arrow Clone")))
+        {
+            health--;
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
         isSliding = player.GetComponent<PlayerMovement>().isSliding;
+
+        //Health
+        if (health == 0)
+        {
+            Debug.Log("DEAD");
+        }
 
         //Attaching hitbox to player
         if (isSliding)
